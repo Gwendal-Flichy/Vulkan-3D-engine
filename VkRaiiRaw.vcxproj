@@ -18,6 +18,15 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\RessourceManager.h" />
+    <ClInclude Include="src\VulkanCore.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\RessourceManager.cpp" />
+    <ClCompile Include="src\VulkanCore.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -138,19 +147,6 @@
       <AdditionalDependencies>vulkan-1.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="src\Game.cpp" />
-    <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\RkSt_VulkanBase.cpp" />
-    <ClCompile Include="src\RkSt_VulkanPipeline.cpp" />
-    <ClCompile Include="src\RkSt_Window.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\Game.h" />
-    <ClInclude Include="src\RkSt_VulkanBase.h" />
-    <ClInclude Include="src\RkSt_VulkanPipeline.h" />
-    <ClInclude Include="src\RkSt_Window.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
