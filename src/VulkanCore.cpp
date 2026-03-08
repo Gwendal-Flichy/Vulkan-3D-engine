@@ -24,8 +24,10 @@ void VulkanApplication::initWindow()
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
 	window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+	//glfwSetCursorPosCallback(window, mouseCallback);
 	glfwSetWindowUserPointer(window, this);
 	glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
+	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 void VulkanApplication::framebufferResizeCallback(GLFWwindow* window, int width, int height)
@@ -499,87 +501,6 @@ void VulkanApplication::createTextureSampler()
 	textureSampler = vk::raii::Sampler(device, samplerInfo);
 }
 
-void VulkanApplication::createUniformBuffers()
-{
-	// For each game object
-	for (auto& gameObject : gameObjects)
-	{
-		gameObject.uniformBuffers.clear();
-		gameObject.uniformBuffersMemory.clear();
-		gameObject.uniformBuffersMapped.clear();
-
-		// Create uniform buffers for each frame in flight
-		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-		{
-			vk::DeviceSize         bufferSize = sizeof(UniformBufferObject);
-			vk::raii::Buffer       buffer({});
-			vk::raii::DeviceMemory bufferMem({});
-			createBuffer(bufferSize, vk::BufferUsageFlagBits::eUniformBuffer, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, buffer, bufferMem);
-			gameObject.uniformBuffers.emplace_back(std::move(buffer));
-			gameObject.uniformBuffersMemory.emplace_back(std::move(bufferMem));
-			gameObject.uniformBuffersMapped.emplace_back(gameObject.uniformBuffersMemory[i].mapMemory(0, bufferSize));
-		}
-	}
-}
-
-void VulkanApplication::createDescriptorPool()
-{
-	// We need MAX_OBJECTS * MAX_FRAMES_IN_FLIGHT descriptor sets
-	std::array poolSize{
-		vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, MAX_OBJECTS * MAX_FRAMES_IN_FLIGHT),
-		vk::DescriptorPoolSize(vk::DescriptorType::eCombinedImageSampler, MAX_OBJECTS * MAX_FRAMES_IN_FLIGHT) };
-	vk::DescriptorPoolCreateInfo poolInfo{
-		.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
-		.maxSets = MAX_OBJECTS * MAX_FRAMES_IN_FLIGHT,
-		.poolSizeCount = static_cast<uint32_t>(poolSize.size()),
-		.pPoolSizes = poolSize.data() };
-	descriptorPool = vk::raii::DescriptorPool(device, poolInfo);
-}
-
-void VulkanApplication::createDescriptorSets()
-{
-	// For each game object
-	for (auto& gameObject : gameObjects)
-	{
-		// Create descriptor sets for each frame in flight
-		std::vector<vk::DescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, *descriptorSetLayout);
-		vk::DescriptorSetAllocateInfo        allocInfo{
-				   .descriptorPool = *descriptorPool,
-				   .descriptorSetCount = static_cast<uint32_t>(layouts.size()),
-				   .pSetLayouts = layouts.data() };
-
-		gameObject.descriptorSets.clear();
-		gameObject.descriptorSets = device.allocateDescriptorSets(allocInfo);
-
-		for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-		{
-			vk::DescriptorBufferInfo bufferInfo{
-				.buffer = *gameObject.uniformBuffers[i],
-				.offset = 0,
-				.range = sizeof(UniformBufferObject) };
-			vk::DescriptorImageInfo imageInfo{
-				.sampler = *textureSampler,
-				.imageView = *vulkanRessourceManage.createTextureImageView(gameObject.TexturePath).textureImageView,
-				.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal };
-			std::array descriptorWrites{
-				vk::WriteDescriptorSet{
-					.dstSet = *gameObject.descriptorSets[i],
-					.dstBinding = 0,
-					.dstArrayElement = 0,
-					.descriptorCount = 1,
-					.descriptorType = vk::DescriptorType::eUniformBuffer,
-					.pBufferInfo = &bufferInfo},
-				vk::WriteDescriptorSet{
-					.dstSet = *gameObject.descriptorSets[i],
-					.dstBinding = 1,
-					.dstArrayElement = 0,
-					.descriptorCount = 1,
-					.descriptorType = vk::DescriptorType::eCombinedImageSampler,
-					.pImageInfo = &imageInfo} };
-			device.updateDescriptorSets(descriptorWrites, {});
-		}
-	}
-}
 
 std::unique_ptr<vk::raii::CommandBuffer> VulkanApplication::beginSingleTimeCommands()
 {
@@ -694,7 +615,7 @@ void VulkanApplication::recordCommandBuffer(uint32_t imageIndex)
 	
 
 	// Draw each object with its own descriptor set
-	for (const auto& gameObject : gameObjects)
+	for (const auto& gameObject : AllGeometries)
 	{
 		// Bind vertex and index buffers 
 		commandBuffer.bindVertexBuffers(0, *vulkanRessourceManage.loadModel(gameObject.ModelPath).vertexBuffer, { 0 });
@@ -784,12 +705,14 @@ void VulkanApplication::updateUniformBuffers()
 	lastFrameTime = currentTime;
 
 	// Camera and projection matrices (shared by all objects)
-	glm::mat4 view = glm::lookAt(glm::vec3(2.0f, 2.0f, 6.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 view = glm::lookAt(glm::vec3(2.0f, 2.0f, 6.0f), glm::vec3(0.f, 0.f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 proj = glm::perspective(glm::radians(45.0f), static_cast<float>(swapChainExtent.width) / static_cast<float>(swapChainExtent.height), 0.1f, 20.0f);
 	proj[1][1] *= -1;
 
+
+
 	// Update uniform buffers for each object
-	for (auto& gameObject : gameObjects)
+	for (auto& gameObject : AllGeometries)
 	{
 		// Apply continuous rotation to the object based on frame time
 		const float rotationSpeed = 0.5f;                          // Rotation speed in radians per second
@@ -811,6 +734,12 @@ void VulkanApplication::updateUniformBuffers()
 
 void VulkanApplication::drawFrame()
 {
+	if (count < 500)
+	{
+		createGeometry();
+		
+	}
+	++count;
 	// Note: inFlightFences, presentCompleteSemaphores, and commandBuffers are indexed by frameIndex,
 	//       while renderFinishedSemaphores is indexed by imageIndex
 	auto fenceResult = device.waitForFences(*inFlightFences[frameIndex], vk::True, UINT64_MAX);
@@ -853,7 +782,7 @@ void VulkanApplication::drawFrame()
 									  .pCommandBuffers = &*commandBuffers[frameIndex],
 									  .signalSemaphoreCount = 1,
 									  .pSignalSemaphores = &*renderFinishedSemaphores[imageIndex] };
-	queue.submit(submitInfo, *inFlightFences[frameIndex]);
+	queue.submit(submitInfo, *inFlightFences[frameIndex]); // l'erreur commence ici avec 3 Geometry
 
 	const vk::PresentInfoKHR presentInfoKHR{ .waitSemaphoreCount = 1,
 											.pWaitSemaphores = &*renderFinishedSemaphores[imageIndex],

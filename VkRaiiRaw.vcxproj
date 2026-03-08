@@ -19,10 +19,25 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\ECS\Archetype.h" />
+    <ClInclude Include="src\ECS\EcsTypes.h" />
+    <ClInclude Include="src\ECS\EntityManager.h" />
+    <ClInclude Include="src\ECS\System.h" />
+    <ClInclude Include="src\ECS\World.h" />
+    <ClInclude Include="src\Game.h" />
     <ClInclude Include="src\RessourceManager.h" />
+    <ClInclude Include="src\Spline.h" />
     <ClInclude Include="src\VulkanCore.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\ECS\Archetype.cpp" />
+    <ClCompile Include="src\ECS\EcsTests.cpp" />
+    <ClCompile Include="src\ECS\EcsTypes.cpp" />
+    <ClCompile Include="src\ECS\EntityManager.cpp" />
+    <ClCompile Include="src\ECS\System.cpp" />
+    <ClCompile Include="src\ECS\World.cpp" />
+    <ClCompile Include="src\Game.cpp" />
+    <ClCompile Include="src\Geometry.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\RessourceManager.cpp" />
     <ClCompile Include="src\VulkanCore.cpp" />

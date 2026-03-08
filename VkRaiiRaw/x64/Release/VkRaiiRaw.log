@@ -1,10 +1,90 @@
-﻿  main.cpp
+﻿  Archetype.cpp
+  EcsTests.cpp
+  EcsTypes.cpp
+  EntityManager.cpp
+  System.cpp
+  World.cpp
+  Game.cpp
+  Geometry.cpp
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(461,12): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/Geometry.cpp')
+  
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(462,12): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/Geometry.cpp')
+  
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(468,17): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/Geometry.cpp')
+  
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(469,17): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/Geometry.cpp')
+  
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(472,11): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/Geometry.cpp')
+  
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(473,11): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/Geometry.cpp')
+  
+  main.cpp
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(461,12): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/main.cpp')
+  
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(462,12): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/main.cpp')
+  
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(468,17): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/main.cpp')
+  
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(469,17): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/main.cpp')
+  
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(472,11): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/main.cpp')
+  
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(473,11): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/main.cpp')
+  
   RessourceManager.cpp
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(461,12): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/RessourceManager.cpp')
+  
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(462,12): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/RessourceManager.cpp')
+  
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(468,17): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/RessourceManager.cpp')
+  
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(469,17): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/RessourceManager.cpp')
+  
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(472,11): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/RessourceManager.cpp')
+  
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(473,11): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/RessourceManager.cpp')
+  
   VulkanCore.cpp
-C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.cpp(711,95): warning C4267: 'argument' : conversion de 'size_t' en 'uint32_t', perte possible de données
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(461,12): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/VulkanCore.cpp')
+  
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(462,12): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/VulkanCore.cpp')
+  
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(468,17): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/VulkanCore.cpp')
+  
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(469,17): warning C4244: 'initialisation' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/VulkanCore.cpp')
+  
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(472,11): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/VulkanCore.cpp')
+  
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.h(473,11): warning C4244: '=' : conversion de 'double' en 'float', perte possible de données
+  (compiler le fichier source 'src/VulkanCore.cpp')
+  
+C:\Users\gmatsam\Downloads\proj_vulkan\src\VulkanCore.cpp(632,95): warning C4267: 'argument' : conversion de 'size_t' en 'uint32_t', perte possible de données
   Génération de code en cours
-  10880 of 10891 functions (99.9%) were compiled, the rest were copied from previous compilation.
-    9650 functions were new in current compilation
-    3 functions had inline decision re-evaluated but remain unchanged
+  4449 of 12767 functions (34.8%) were compiled, the rest were copied from previous compilation.
+    1885 functions were new in current compilation
+    1650 functions had inline decision re-evaluated but remain unchanged
   Fin de la génération du code
   VkRaiiRaw.vcxproj -> C:\Users\gmatsam\Downloads\proj_vulkan\x64\Release\VkRaiiRaw.exe

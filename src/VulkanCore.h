@@ -112,12 +112,110 @@ struct std::hash<Vertex>
 	}
 };
 
+struct UniformBufferObject
+{
+	alignas(16) glm::mat4 model;
+	alignas(16) glm::mat4 view;
+	alignas(16) glm::mat4 proj;
+};
+
+
+class Camera
+{
+public:
+
+	void processMouseMovement(float xOffset, float yOffset, bool constrainPitch) {
+		xOffset *= mouseSensitivity;
+		yOffset *= mouseSensitivity;
+
+		yaw += xOffset;
+		pitch += yOffset;
+
+		// Constrain pitch to avoid flipping
+		if (constrainPitch) {
+			pitch = std::clamp(pitch, -89.0f, 89.0f);
+		}
+
+		// Update camera vectors based on updated Euler angles
+		updateCameraVectors();
+	}
+
+	void updateCameraVectors() 
+	{
+		// Calculate the new front vector
+		glm::vec3 newFront;
+		newFront.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+		newFront.y = sin(glm::radians(pitch));
+		newFront.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+		front = glm::normalize(newFront);
+
+		// Recalculate the right and up vectors
+		right = glm::normalize(glm::cross(front, worldUp));
+		up = glm::normalize(glm::cross(right, front));
+	}
+
+	glm::mat4 getViewMatrix() const {
+		return glm::lookAt(position, position + front, up);
+	}
+
+	glm::mat4 getProjectionMatrix(float aspectRatio, float nearPlane = 0.1f, float farPlane = 100.0f) const {
+		return glm::perspective(glm::radians(zoom), aspectRatio, nearPlane, farPlane);
+	}
+
+	// Spatial positioning and orientation vectors
+// These form the camera's local coordinate system in world space
+	glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);     // Camera's location in world coordinates
+	glm::vec3 front = glm::vec3(0.0f, 1.0f, 0.0f);        // Forward direction (where camera is looking)
+	glm::vec3 up;           // Camera's local up direction (for roll control)
+	glm::vec3 right;        // Camera's local right direction (perpendicular to front and up)
+	glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);      // Global up vector reference (typically Y-axis)
+	// Rotation representation using Euler angles
+// Provides intuitive control while managing gimbal lock and other rotation complexities
+	float yaw = -90.0f;              // Horizontal rotation around the world up-axis (left-right looking)
+	float pitch = 0.0f;            // Vertical rotation around the camera's right axis (up-down looking)
+
+	float mouseSensitivity = 1.f; // Multiplier for mouse input to rotation angle conversion
+	float zoom = 45.f;             // Field of view control for perspective projection
+
+};
+
+
 
 
 // Define a structure to hold per-object data
 class Geometry
 {
 public:
+	Geometry(VulkanApplication& Renderer) : renderer(Renderer)
+	{
+	}
+
+	
+	void destroy()
+	{
+		
+		// Unmap memory
+		for (size_t i = 0; i < this->uniformBuffersMemory.size(); i++)
+		{
+			if (this->uniformBuffersMapped[i] != nullptr)
+			{
+				this->uniformBuffersMemory[i].unmapMemory();
+			}
+		}
+
+		this->uniformBuffers.clear();
+		this->uniformBuffersMemory.clear();
+		this->uniformBuffersMapped.clear();
+		
+		this->descriptorSets.clear();
+		this->descriptorPool.clear();
+	}
+
+	void createUniformBuffers();
+
+	void createDescriptorPool();
+
+	void createDescriptorSets();
 
 
 	void setPosition(glm::vec3 newPosition)
@@ -197,6 +295,7 @@ public:
 	}
 
 	friend VulkanApplication;
+	VulkanApplication& renderer;
 protected:
 	// Transform properties
 	glm::vec3 position = { 0.0f, 0.0f, 0.0f };
@@ -210,6 +309,7 @@ protected:
 
 	// Descriptor sets for this object (one per frame in flight)
 	std::vector<vk::raii::DescriptorSet> descriptorSets;
+	vk::raii::DescriptorPool descriptorPool = nullptr;
 
 	// Calculate model matrix based on position, rotation, and scale
 	glm::mat4 getModelMatrix() const
@@ -223,18 +323,12 @@ protected:
 		return model;
 	}
 
-	std::string TexturePath;
-	std::string ModelPath;
+	std::string TexturePath = "textures/Sanstitre.png";;
+	std::string ModelPath = "models/cube_test_mesh_vulkan.obj";
 
 	glm::mat4 transformationMatrix = glm::mat4(1.0f);
 };
 
-struct UniformBufferObject
-{
-	alignas(16) glm::mat4 model;
-	alignas(16) glm::mat4 view;
-	alignas(16) glm::mat4 proj;
-};
 
 class VulkanApplication
 {
@@ -272,7 +366,8 @@ public:
 	vk::raii::Sampler      textureSampler = nullptr;
 
 	// Array of game objects to render
-	std::array<Geometry, MAX_OBJECTS> gameObjects;
+	//std::array<Geometry, MAX_OBJECTS> gameObjects;
+	std::vector<Geometry> AllGeometries;
 
 	vk::raii::DescriptorPool descriptorPool = nullptr;
 
@@ -313,9 +408,6 @@ public:
 		createDepthResources();
 		createTextureSampler();
 		setupGameObjects();
-		createUniformBuffers();
-		createDescriptorPool();
-		createDescriptorSets();
 		createCommandBuffers();
 		createSyncObjects();
 	}
@@ -344,6 +436,50 @@ public:
 		vk::ImageAspectFlags    image_aspect_flags);
 
 	void recreateSwapChain();
+
+
+	Geometry& createGeometry()
+	{
+		Geometry geometry(*this);
+		AllGeometries.push_back(std::move(geometry));
+		AllGeometries.back().createUniformBuffers();
+		AllGeometries.back().createDescriptorPool();
+		AllGeometries.back().createDescriptorSets();
+		return AllGeometries.back();
+	}
+
+
+	void mouseCallback(GLFWwindow* window, double xpos, double ypos) {
+		// State persistence for calculating movement deltas
+		// Static variables maintain state between callback invocations
+		static bool firstMouse = true;          // Flag to handle initial mouse position
+		static float lastX = 0.0f, lastY = 0.0f;  // Previous mouse position for delta calculation
+
+		// Handle initial mouse position to prevent sudden camera jumps
+		// First callback provides absolute position, not relative movement
+		if (firstMouse) {
+			lastX = xpos;               // Initialize previous position
+			lastY = ypos;
+			firstMouse = false;         // Disable special handling for subsequent calls
+		}
+
+		// Calculate mouse movement deltas since last callback
+		// These deltas represent the amount and direction of mouse movement
+		float xoffset = xpos - lastX;                   // Horizontal movement (left-right)
+		float yoffset = lastY - ypos;                   // Vertical movement (inverted: screen Y increases downward, camera pitch increases upward)
+
+		// Update state for next callback iteration
+		lastX = xpos;
+		lastY = ypos;
+
+		// Convert mouse movement to camera rotation
+		// Delta values drive continuous camera orientation changes
+		camera.processMouseMovement(xoffset, yoffset,true);
+	}
+
+	int count = 0;
+
+	Camera camera;
 private:
 	void mainLoop()
 	{
@@ -365,23 +501,11 @@ private:
 	void cleanup()
 	{
 		// Clean up resources in each GameObject
-		for (auto& gameObject : gameObjects)
+		for (auto& gameObject : AllGeometries)
 		{
-			// Unmap memory
-			for (size_t i = 0; i < gameObject.uniformBuffersMemory.size(); i++)
-			{
-				if (gameObject.uniformBuffersMapped[i] != nullptr)
-				{
-					gameObject.uniformBuffersMemory[i].unmapMemory();
-				}
-			}
-
-			// Clear vectors to release resources
-			gameObject.uniformBuffers.clear();
-			gameObject.uniformBuffersMemory.clear();
-			gameObject.uniformBuffersMapped.clear();
+			gameObject.destroy();
 			vulkanRessourceManage.clear();
-			gameObject.descriptorSets.clear();
+			
 		}
 
 		// Clean up GLFW resources
@@ -436,34 +560,43 @@ private:
 	// Initialize the game objects with different positions, rotations, and scales
 	void setupGameObjects()
 	{
-		// Object 1 - Center
-		gameObjects[0].position = { 0.0f, 0.0f, 0.0f };
-		gameObjects[0].rotation = { 0.0f, glm::radians(-90.0f), 0.0f };
-		gameObjects[0].scale = { 1.0f, 1.0f, 1.0f };
-		gameObjects[0].TexturePath = "textures/viking_room.png";
-		gameObjects[0].ModelPath = "models/cube_test_mesh_vulkan.obj";
+		//Object 1 - Center
+		Geometry geo1(*this);
+		geo1.position = { 0.0f, 0.0f, 0.0f };
+		geo1.rotation = { 0.0f, glm::radians(-90.0f), 0.0f };
+		geo1.scale = { 1.0f, 1.0f, 1.0f };
+		geo1.TexturePath = "textures/viking_room.png";
+		geo1.ModelPath = "models/cube_test_mesh_vulkan.obj";
+		AllGeometries.push_back(std::move(geo1));
+		AllGeometries.back().createUniformBuffers();
+		AllGeometries.back().createDescriptorPool();
+		AllGeometries.back().createDescriptorSets();
 
 		// Object 2 - Left
-		gameObjects[1].position = { -2.0f, 0.0f, -1.0f };
-		gameObjects[1].rotation = { 0.0f, glm::radians(-45.0f), 0.0f };
-		gameObjects[1].scale = { 0.75f, 0.75f, 0.75f };
-		gameObjects[1].TexturePath = "textures/viking_room.png";
-		gameObjects[1].ModelPath = "models/viking_room.obj";
+		Geometry geo2(*this);
+		geo2.position = { -2.0f, 0.0f, -1.0f };
+		geo2.rotation = { 0.0f, glm::radians(-45.0f), 0.0f };
+		geo2.scale = { 0.75f, 0.75f, 0.75f };
+		geo2.TexturePath = "textures/viking_room.png";
+		geo2.ModelPath = "models/viking_room.obj";
+		AllGeometries.push_back(std::move(geo2));
+		AllGeometries.back().createUniformBuffers();
+		AllGeometries.back().createDescriptorPool();
+		AllGeometries.back().createDescriptorSets();
 
 		// Object 3 - Right
-		gameObjects[2].position = { 2.0f, 0.0f, -1.0f };
-		gameObjects[2].rotation = { 0.0f, glm::radians(45.0f), 0.0f };
-		gameObjects[2].scale = { 0.75f, 0.75f, 0.75f };
-		gameObjects[2].TexturePath = "textures/Sanstitre.png";
-		gameObjects[2].ModelPath = "models/viking_room.obj";
+		Geometry geo3(*this);
+		geo3.position = { 2.0f, 0.0f, -1.0f };
+		geo3.rotation = { 0.0f, glm::radians(45.0f), 0.0f };
+		geo3.scale = { 0.75f, 0.75f, 0.75f };
+		geo3.TexturePath = "textures/Sanstitre.png";
+		geo3.ModelPath = "models/viking_room.obj";
+		AllGeometries.push_back(std::move(geo3));
+		AllGeometries.back().createUniformBuffers();
+		AllGeometries.back().createDescriptorPool();
+		AllGeometries.back().createDescriptorSets();
 	}
 
-	// Create uniform buffers for each object
-	void createUniformBuffers();
-
-	void createDescriptorPool();
-
-	void createDescriptorSets();
 
 	std::unique_ptr<vk::raii::CommandBuffer> beginSingleTimeCommands();
 
